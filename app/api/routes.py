@@ -13,3 +13,9 @@ async def verify_webhook(request: Request):
         return Response(content=challenge)
     else:
         raise HTTPException(status_code=403, detail="Verification token mismatch")
+
+@router.post("/webhook")
+async def webhook_receiver(request: Request):
+    data = await request.json()
+    print("Webhook recebido:", data)
+    return {"status": "ok"}
