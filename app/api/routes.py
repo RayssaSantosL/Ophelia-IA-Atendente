@@ -1,13 +1,15 @@
-from fastapi import APIRouter
-from pydantic import BaseModel
-from app.core.nlp import chat_with_gpt
+from fastapi import APIRouter, Request, Response, HTTPException
+import os
 
 router = APIRouter()
 
-class Message(BaseModel):
-    text: str
+VERIFY_TOKEN = os.getenv("VERIFY_TOKEN", "ophelia5202")
 
-@router.post("/process_message/")
-async def process_message(message: Message):
-    resposta = chat_with_gpt(message.text)
-    return {"resposta": resposta, "original_message": message.text}
+@router.get("/webhook")
+async def verify_webhook(request: Request):
+    params = dict(request.query_params)
+    if params.get("hub.mode") == "subscribe" and params.get("hub.verify_token") == VERIFY_TOKEN:
+        challenge = params.get("hub.challenge")
+        return Response(content=challenge)
+    else:
+        raise HTTPException(status_code=403, detail="Verification token mismatch")
